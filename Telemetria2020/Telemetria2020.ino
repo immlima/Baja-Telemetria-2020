@@ -36,7 +36,7 @@ byte bar8[8]={B11111,B11111,B00000,B00000,B00000,B00000,B00000,B00000};
 
 void setup(){
   Serial.begin(9600);                                              //inicio da comunicaçao Serial DEBUG
-  temp=map(analogRead(pin_Temp),0,1023,-55,150);                   //coeta da temperatura
+  temp=map(analogRead(pin_Temp),0,1023,-55,150);                   //coleta da temperatura
 
   pinMode(pin_Temp,INPUT);                                         //definindo como entrada o pino de temp
   pinMode(2,INPUT);                                                //definindo como entrada o pino de contagem dos pulsos de RPM
