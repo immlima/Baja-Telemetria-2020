@@ -1,4 +1,4 @@
-#include <Wire.h>                                        // Biblioteca nativa da comunicaçao I2C
+ #include <Wire.h>                                        // Biblioteca nativa da comunicaçao I2C
 #include <LiquidCrystal_I2C.h>                           // Biblioteca LCD
 #include "RTClib.h"                                      // Biblioteca RTC
 #include <SD.h>                                          // Biblioteca Modulo SD
@@ -36,15 +36,17 @@ byte bar8[8]={B11111,B11111,B00000,B00000,B00000,B00000,B00000,B00000};
 
 void setup(){
   Serial.begin(9600);                                              //inicio da comunicaçao Serial DEBUG
-  temp=map(analogRead(pin_Temp),0,1023,-55,150);                   //coleta da temperatura
 
+  
   pinMode(pin_Temp,INPUT);                                         //definindo como entrada o pino de temp
-  pinMode(2,INPUT);                                                //definindo como entrada o pino de contagem dos pulsos de RPM
-  pinMode(3,INPUT);                                                //definindo como entrada o pino de contagem dos pulsos de VELO
-  pinMode(6,OUTPUT);                                               //definindo como saida o pino da barra grafica do rpm
+  pinMode(pin_rpm,INPUT);                                                //definindo como entrada o pino de contagem dos pulsos de RPM
+  pinMode(pin_velo,INPUT);                                                //definindo como entrada o pino de contagem dos pulsos de VELO
+  pinMode(pin_Barra_Grafica_Rpm,OUTPUT);                                               //definindo como saida o pino da barra grafica do rpm
   pinMode(pin_SD_cs,OUTPUT);                                       //definido como saida o pino de ativaçao do modulo SD
   attachInterrupt(digitalPinToInterrupt(pin_rpm),contRPM,RISING);  //definindo a monitoriamento de interrupt  dos pulsos do RPM
   attachInterrupt(digitalPinToInterrupt(pin_velo),contVELO,RISING);//definindo a monitoriamento de interrupt  dos pulsos do VELO
+  
+  temp=map(analogRead(pin_Temp),0,1023,-55,150);                   //coleta da temperatura
 
 //*********SALVANDO NUMEROS GRANDES NA MEMORIA DO DISPLAY*********//
   lcd.createChar(1,bar1);lcd.createChar(2,bar2);
@@ -77,7 +79,10 @@ void setup(){
   }else{
     Serial.println("Erro ao abrir arquivo");                                  // se nao erro
   }
+  lcd.setCursor(7,0);
+  lcd.print("Tmp");
 }
+
 void contRPM(){
   pulsosRPM++;                                                                // contagem de pulsos de rpm do motor
 }
@@ -208,8 +213,7 @@ void printRPM(int *rpm_p){
 //*****FUNCAO PRA ESCREVER TEMPERATURA NO DISPLAY**********//
 void printTEMP(byte *temp_p){
   *temp_p=map(analogRead(pin_Temp),0,1023,-55,150);
-  lcd.setCursor(7,0);
-  lcd.print("Tmp");
+  Serial.println(analogRead(pin_Temp));
   if(*temp_p>99|| *temp_p<-9){
     lcd.setCursor(7,1);
     lcd.print("    ");
@@ -250,7 +254,7 @@ void loop(){
    //RPM
   detachInterrupt(0);                                              // pausa a contagem de pulsos pro calculo do rpm
   rpm=(60000/1/* PULSO POR CICLO */)/(millis()-timeold)*pulsosRPM; // calculo do rpm
-  analogWrite(6, map(rpm,0,3600,0,255));                           // escrita por pwn na barra grafica
+  analogWrite(pin_Barra_Grafica_Rpm, map(rpm,0,3600,0,255));                           // escrita por pwn na barra grafica
   pulsosRPM=0;                                                     // retoma o numero de pulsos a 0
   attachInterrupt(digitalPinToInterrupt(pin_rpm),contRPM,RISING);  // retorna a contagem
 
@@ -263,11 +267,12 @@ void loop(){
 
   timeold=millis(); // atuliza o tempo do ultimo calculo
 
-
   printVELO(&velocidade);
   printRPM(&rpm);
   printTEMP(&temp);
   printSD();
+
+  Serial.println(temp);
 
   Serial.println(millis()-ant);
   delay(100-(millis()-ant)); //delay de 100 milisegundos
